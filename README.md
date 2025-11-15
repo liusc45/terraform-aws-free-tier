@@ -1,66 +1,214 @@
-# Terraform AWS Free Tier
+# Terraform AWS Free Tier Infrastructure
 
-> Getting started with the Terraform for managing a base free-tier AWS resources.
+A production-ready Terraform configuration for deploying AWS Free Tier infrastructure with security best practices, multi-environment support, and comprehensive monitoring.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen.svg)](./LICENSE)
+## 🏗️ Architecture Overview
 
-### Project description
+### Core Components
+- **VPC**: Virtual Private Cloud with DNS support and proper CIDR planning
+- **Public Subnet**: For public-facing resources with internet access
+- **Internet Gateway**: Enables internet connectivity for VPC resources
+- **Route Table**: Routes internet traffic through the IGW
+- **EC2 Instance**: Free tier eligible (t2.micro/t3.micro) with Ubuntu 22.04
+- **Security Group**: Configured with SSH, HTTP, and HTTPS access
+- **SSH Key Pair**: Secure instance access with environment-specific keys
 
-This is a [Terraform](https://www.terraform.io/) project for managing AWS resources. 
+### Security Features
+- **CloudTrail**: API logging and auditing (enabled in staging/production)
+- **GuardDuty**: Threat detection and monitoring (enabled in staging/production)
+- **AWS Config**: Compliance monitoring and configuration tracking
+- **IAM Roles**: Least-privilege access with instance profiles
+- **KMS Encryption**: Encryption for sensitive data and logs
+- **IMDSv2**: Required metadata access for improved security
 
-It can build the next infrastructure:
+## 📁 Project Structure
 
-* [VPC](https://docs.aws.amazon.com/vpc/latest/userguide/what-is-amazon-vpc.html)
-* Public [Subnet](https://docs.aws.amazon.com/vpc/latest/userguide/working-with-vpcs.html#AddaSubnet) in the `VPC`
-* [IGW](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Internet_Gateway.html) to enable access to or from the Internet for `VPC`
-* [Route Table](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Route_Tables.html) to associate `IGW`, `VPC` and `Subnet`
-* [EC2 Instance](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/concepts.html) in the public `Subnet` with the HTTP(s) & SSH access
+```
+terraform-aws-free-tier/
+├── src/                           # Source code
+│   ├── free-tier/                # Main Terraform configuration
+│   │   ├── main.tf               # Main orchestration
+│   │   ├── variables.tf          # Variables
+│   │   ├── outputs.tf            # Outputs
+│   │   ├── versions.tf           # Terraform versions
+│   │   ├── backend/              # Backend S3 configuration
+│   │   │   └── example.config.tf
+│   │   └── provision/            # Provisioning scripts
+│   │       └── access/           # SSH access keys
+│   ├── modules/                  # Reusable Terraform modules
+│   │   ├── vpc/                 # VPC module
+│   │   ├── public-subnet/       # Public subnet module
+│   │   ├── internet-gateway/    # Internet gateway module
+│   │   ├── route-table/         # Route table module
+│   │   └── ec2/                 # EC2 instance module
+│   └── README.md                 # Source documentation
+├── memory-bank/                   # Project memory and context (Claude)
+├── scripts/                      # Deployment and utility scripts
+├── docs/                         # Documentation
+├── .claude/                      # Claude Code settings (ignored)
+├── .gitignore                    # Git ignore rules
+├── CHANGELOG.md                  # Changelog
+├── CLAUDE.md                     # Claude Code guidance
+├── CONTRIBUTING.md               # Contributing guidelines
+├── LEARNING-LOG.md               # Learning and development log
+├── LICENSE                       # License file
+└── README.md                     # This file
+```
 
-### Pre steps
+## 🚀 Quick Start
 
-1. [Install Terraform](https://learn.hashicorp.com/terraform/getting-started/install.html)
-2. Create AWS account
-3. If the file `~/.aws/credentials` does't exist, create it and add you Terraform profile to the file. For example:
-   ```text
-   [terraform]
-   aws_access_key_id = Your access key
-   aws_secret_access_key = Your secret access key 
-   ```
-4. Create S3 bucket to store Terraform state
-5. Create config file `./src/free-tier/backend/config.tf` that will contain information how to store state in a given bucket. See [example](./src/free-tier/backend/example.config.tf).
-6. Create SSH key pair to connect to EC2 instance:
+### Prerequisites
+
+1. **Terraform >= 1.0**
+2. **AWS CLI** configured with appropriate credentials
+3. **Git** for version control
+
+### Environment Setup
+
+1. **Clone the repository:**
    ```bash
-   cd ./src/free-tier/provision/access
+   git clone https://github.com/liusc45/terraform-aws-free-tier.git
+   cd terraform-aws-free-tier
+   ```
 
-   # it creates "free-tier-ec2-key" private key and "free-tier-ec2-key.pub" public key
-   ssh-keygen -f free-tier-ec2-key
-   ``` 
+2. **Generate SSH keys:**
+   ```bash
+   # Development
+   ssh-keygen -t rsa -b 4096 -f keys/dev-ec2-key -C "dev@terraform-free-tier"
    
-### Build infrastructure
+   # Staging
+   ssh-keygen -t rsa -b 4096 -f keys/stg-ec2-key -C "stg@terraform-free-tier"
+   
+   # Production
+   ssh-keygen -t rsa -b 4096 -f keys/prod-ec2-key -C "prod@terraform-free-tier"
+   ```
 
-1. `cd ./src/free-tier`
-2. `terraform init -backend-config="./backend/config.tf"`
-3. `terraform plan`
-4. `terraform apply`
+3. **Initialize Terraform:**
+   ```bash
+   cd src/free-tier
+   terraform init -backend-config="./backend/example.config.tf"
+   ```
 
-### Post steps
+4. **Configure your variables:**
+   Create a `terraform.tfvars` file:
+   ```bash
+   cp backend/example.config.tf backend/config.tf
+   # Edit backend/config.tf with your specific configuration
+   ```
 
-After building the infrastructure you can try to connect to you `EC2 instance` via SSH:
+### Deployment Options
 
-1. `cd ./src/free-tier`
-2. `ssh -i ./provision/access/free-tier-ec2-key ubuntu@[EC2 public IP]`
+#### Option 1: Using Workspaces (Recommended)
 
-To check HTTP access you can install `apache2` on your EC2 instance:
+```bash
+# Create and select workspace
+terraform workspace new dev
+terraform workspace select dev
 
-1. `sudo apt update && sudo apt install apache2` (on EC2 machine)
-2. `sudo service apache2 start` (on EC2 machine) 
-3. Check in browser: `http://[EC2 public IP]/`. You can see `Apache2 Default Page` (something like [this](https://annex.exploratorium.edu/))
+# Plan and apply
+terraform plan
+terraform apply
 
-To destroy infrastructure:
+# Switch to staging
+terraform workspace select stg
+terraform apply
 
-1. `cd ./src/free-tier`
-2. `terraform destroy`
+# Switch to production
+terraform workspace select prod
+terraform apply
+```
 
-### Similar projects
+#### Option 2: Using Environment Directories
 
-* https://github.com/rogeriomm/aws-lab
+```bash
+# Development
+cd environments/dev
+terraform init
+terraform apply
+
+# Staging
+cd ../stg
+terraform init
+terraform apply
+
+# Production
+cd ../prod
+terraform init
+terraform apply
+```
+
+## 🔧 Configuration
+
+### Variables
+
+| Variable | Description | Default | Environment Override |
+|----------|-------------|---------|---------------------|
+| `profile` | AWS CLI profile | `terraform` | ✅ |
+| `region` | AWS region | `us-east-1` | ✅ |
+| `ec2_ssh_key_name` | SSH key name | `free-tier-ec2-key` | ✅ |
+| `ec2_ssh_public_key_path` | Path to public key | `./keys/free-tier-ec2-key.pub` | ✅ |
+| `allowed_ssh_cidr` | SSH access CIDR | `0.0.0.0/0` | ✅ |
+| `vpc_cidr_block` | VPC CIDR block | `10.0.0.0/16` | ✅ |
+| `subnet_cidr_block` | Subnet CIDR block | `10.0.1.0/24` | ✅ |
+| `availability_zone` | Availability zone | `us-east-1a` | ✅ |
+
+### Security Features by Environment
+
+| Feature | Dev | Staging | Production |
+|---------|-----|---------|------------|
+| CloudTrail | ❌ | ✅ | ✅ |
+| GuardDuty | ❌ | ✅ | ✅ |
+| AWS Config | ❌ | ✅ | ✅ |
+| SSH Access | Open | Corporate | Office IP |
+| Monitoring | Basic | Enhanced | Full |
+
+## 📊 Outputs
+
+After deployment, you'll receive:
+
+```hcl
+vpc_id = "vpc-xxxxxxxxx"
+vpc_cidr_block = "10.0.0.0/16"
+public_subnet_id = "subnet-xxxxxxxxx"
+internet_gateway_id = "igw-xxxxxxxxx"
+ec2_public_ip = "x.x.x.x"
+ec2_instance_id = "i-xxxxxxxxx"
+ssh_connection_command = "ssh -i keys/dev-ec2-key ubuntu@x.x.x.x"
+security_outputs = {
+  cloudtrail_arn = "arn:aws:cloudtrail:..."
+  guardduty_detector_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+  config_recorder_arn = "arn:aws:config:..."
+  ec2_instance_profile_arn = "arn:aws:iam::..."
+}
+environment = "dev"
+```
+
+## 🔒 Security Best Practices
+
+### Implemented Controls
+
+1. **Network Security**
+   - VPC with private IP ranges
+   - Security groups with least privilege
+   - Configurable SSH access by CIDR
+
+2. **Identity & Access Management**
+   - IAM roles for EC2 instances
+   - Instance profiles for secure API access
+   - Environment-specific AWS profiles
+
+3. **Monitoring & Logging**
+   - CloudTrail for API auditing
+   - GuardDuty for threat detection
+   - AWS Config for compliance tracking
+   - CloudWatch metrics and logs
+
+4. **Encryption**
+   - KMS keys for data encryption
+   - S3 bucket encryption for logs
+   - IMDSv2 for metadata protection
+
+5. **Infrastructure as Code**
+   - Version-controlled configurations
+   - Environment-specific settings
+   - Automated deployments

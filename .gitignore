@@ -1,5 +1,186 @@
-.idea/
+# Terraform
 .terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+.terraform.rc
+.terraform.tfvars
+*.auto.tfvars
+*.auto.tfvars.json
 
+# Terraform Plan
+*.out
+*tfplan*
+
+# Backend Configuration
 **/backend/config.tf
-**/provision/access/free-tier-ec2-key*
+
+# SSH Keys (PRIVADAS)
+**/provision/access/free-tier-ec2-key
+**/*.pem
+**/*.ppk
+**/id_*
+**/my-key
+**/aws-ssh-key
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+terraform-debug.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# Terraform Binary
+terraform-provider-aws
+terraform-provider-*
+
+# AWS CLI
+.aws/
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+.cache/
+
+# Secrets (in case someone accidentally commits them)
+.secrets
+.env
+.env.local
+.env.*.local
+
+# Node.js (if using any JS tooling)
+node_modules/
+.npm
+.npmrc
+.eslintcache
+
+# Python (if using any Python tooling)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.pytest_cache/
+.coverage
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+Session.vim
+Sessionx.vim
+.netrwhist
+*~
+tags
+[._]*.un~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+*.rej
+*.tmp
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+.idea/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Archives
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Local development
+.local/
+.localization/
+local/
+out/
+target/
+
+# Claude Code (Anthropic AI Assistant)
+.claude/
+memory-bank/
+*.settings.local.json
+claudedocs/
+
+# Grok AI (xAI)
+.grok/
+grok-cache/
+grok-memory/
+
+# IDE and Editor specific (additional)
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Session and state files
+.session
+*.session
+.state
+*.state
+ активный_контекст.md
+ active_context.md
